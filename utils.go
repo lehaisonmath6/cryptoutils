@@ -81,7 +81,7 @@ func DecryptMessage(privatekey *ecdsa.PrivateKey, cipherMessage string) (string,
 	return string(decryptBytes), nil
 }
 
-func CheckSignature2(publickeyHex, signature, message string) bool {
+func ChecSignatureHex(publickeyHex, signature, message string) bool {
 	messBytes, err := hex.DecodeString(message)
 	if err != nil {
 		return false
@@ -99,4 +99,16 @@ func CheckSignature2(publickeyHex, signature, message string) bool {
 
 	compressedPub := crypto.CompressPubkey(aRecoveredPub)
 	return publickeyHex == hex.EncodeToString(compressedPub)
+}
+
+func SignHexMessage(privatekey *ecdsa.PrivateKey, hexmessage string) (string, error) {
+	messageBytes, err := hex.DecodeString(hexmessage)
+	if err != nil {
+		return "", err
+	}
+	signBytes, err := crypto.Sign(HashBytes(messageBytes), privatekey)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(signBytes), nil
 }
