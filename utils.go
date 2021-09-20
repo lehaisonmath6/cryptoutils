@@ -69,6 +69,27 @@ func EncryptMessage(publickeyHex string, message string) (string, error) {
 	return hex.EncodeToString(cipherBytes), err
 }
 
+func EncryptHexMessage(publickeyHex string, message string) (string, error) {
+	publickeyBytes, err := hex.DecodeString(publickeyHex)
+	if err != nil {
+		return "", err
+	}
+	publickey, err := crypto.DecompressPubkey(publickeyBytes)
+	if err != nil {
+		return "", err
+	}
+	keyEncrypt := ecies.ImportECDSAPublic(publickey)
+	messageBytes, err := hex.DecodeString(message)
+	if err != nil {
+		return "", err
+	}
+	cipherBytes, err := ecies.Encrypt(rand.Reader, keyEncrypt, messageBytes, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(cipherBytes), err
+}
+
 func DecryptMessage(privatekey *ecdsa.PrivateKey, cipherMessage string) (string, error) {
 	cipherMessageBytes, err := hex.DecodeString(cipherMessage)
 	if err != nil {
@@ -79,6 +100,18 @@ func DecryptMessage(privatekey *ecdsa.PrivateKey, cipherMessage string) (string,
 		return "", err
 	}
 	return string(decryptBytes), nil
+}
+
+func DecryptHexMessage(privatekey *ecdsa.PrivateKey, cipherMessage string) (string, error) {
+	cipherMessageBytes, err := hex.DecodeString(cipherMessage)
+	if err != nil {
+		return "", err
+	}
+	decryptBytes, err := ecies.ImportECDSA(privatekey).Decrypt(cipherMessageBytes, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(decryptBytes), nil
 }
 
 func ChecSignatureHex(publickeyHex, signature, message string) bool {
